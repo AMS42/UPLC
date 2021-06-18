@@ -1,0 +1,1027 @@
+s = "print(t);";
+
+func len(o) {
+    retVal = 0;
+    if (typeof(o) == "<list>") {
+        retVal = int(o);
+    } else if (typeof(o) == "<string>") {
+        retVal = int(list(o));
+    } else {
+        retVal = 1;
+    };
+    retVal;
+};
+
+func dict(keys, values) {
+    if ((typeof(keys) == "<string>") || (typeof(keys) == "<list>")) {
+        kt = typeof(keys);
+        if ((typeof(values) == kt) && (kt == "<list>")) {
+            if (int(keys) == int(values)) {
+                ks = keys;
+                vs = values;
+            } else {
+                ks = keys;
+                vs = values;
+            };
+        };
+    } else {
+        ks = [keys];
+        vs = [values];
+    };
+    [ks, vs];
+};
+
+func get(d, key) {
+    keys = d[0];
+    values = d[1];
+    retVal = none;
+    i = 0;
+    while (i < len(keys)) {
+        if (keys[i] == key) {
+            retVal = values[i];
+        };
+        i = i + 1;
+    };
+    retVal;
+};
+
+func put(d, key, value) {
+    kt = [];
+    vt = [];
+    if (get(d, key) != none) {
+        i = 0;
+        ks = d[0];
+        vs = d[1];
+        while (i < len(d[0])) {
+            kt = kt + ks[i];
+            if (ks[i] == key) {
+                vt = vt + value;
+            } else {
+                vt = vt + vs[i];
+            };
+            i = i + 1;
+        };
+    } else {
+        keys = d[0];
+        values = d[1];
+        kt = keys + key;
+        vt = values + value;
+    };
+    [kt, vt];
+};
+
+func delete(d, key) {
+    kt = []; vt = [];
+    if (get(d, key) != none) {
+        i = 0;
+        ks = d[0];
+        vs = d[1];
+        while (i < len(d[0])) {
+            if (ks[i] != key) {
+                kt = kt + ks[i];
+                vt = vt + vs[i];
+            };
+            i = i + 1;
+        };
+    };
+    [kt, vt];
+};
+
+func containsKey(d, key) {
+    if (get(d, key) != none) {
+        true;
+    } else {
+        false;
+    };
+};
+
+func keys(d) { d[0]; };
+func values(d) { d[1]; };
+
+tokenTypes = [
+    "tt_AND", "tt_ASSIGN", "tt_BOOL", "tt_COLON", "tt_COMMA", "tt_DIV", "tt_DO", "tt_EOF",
+    "tt_ELSE", "tt_EQ", "tt_FALSE", "tt_FLOAT", "tt_FUNC", "tt_GE", "GT", "tt_ID", "tt_IF",
+    "tt_INT", "tt_INTDIV", "tt_LBRACE", "tt_LBRACK", "tt_LE", "tt_LIST", "tt_LPAR", "tt_LT",
+    "tt_MINUS", "tt_MOD", "tt_NE", "tt_NONE", "tt_NOT", "tt_NUM", "tt_OR", "tt_PERIOD", 
+    "tt_PLUS", "tt_PRINT", "tt_PROMPT", "tt_QUOTE", "tt_RBRACE", "tt_RBRACK", "tt_RPAR",
+    "tt_SEMICOLON", "tt_STAR", "tt_STR", "tt_STRING", "tt_TIMES", "tt_TYPEOF", "tt_TRUE",
+    "tt_WHILE"
+];
+
+op1s = ["op1_NEG", "op1_NOT"];
+
+op2s = [
+    "op2_EQ", "op2_GE", "op2_GT", "op2_LE", "op2_LT", "op2_NE", "op2_MINUS", "op2_OR",
+    "op2_PLUS", "op2_AND", "op2_DIV", "op2_INTDIV", "op2_MOD", "op2_STAR"
+];
+
+keywords = dict(
+    [
+        "and", "bool", "do", "else", "false", "float", "func",
+        "if", "int", "lambda", "list", "mod", "none", "not", "or", "print",
+        "prompt", "str", "times", "true", "typeof", "while"
+    ],
+    [
+        "tt_AND", "tt_BOOL", "tt_DO", "tt_ELSE", "tt_FALSE", 
+        "tt_FLOAT", "tt_FUNC", "tt_IF", "tt_INT", "tt_LAMBDA",
+        "tt_LIST", 
+        "tt_MOD", "tt_NONE", "tt_NOT", "tt_OR", "tt_PRINT",
+        "tt_PROMPT", "tt_STR", "tt_TIMES", "tt_TRUE", 
+        "tt_TYPEOF", "tt_WHILE"
+    ]
+);
+
+opsAndPunct = dict(
+    [
+        "&&", "=", ":", ",", "/", "==", "->", "//", ">=", ">",
+        ">>", "{", "[", "<=", "(", "<", "-", "%", "!=", "<>", "!",
+        "||", ".", "+", """", "}", "]", ")", ";", "*"
+    ],
+    [
+        "tt_AND", "tt_ASSIGN", "tt_COLON", "tt_COMMA", "tt_DIV",
+        "tt_EQ", "tt_IF", "tt_INTDIV", "tt_GE", "tt_GT", "tt_LAMBDA",
+        "tt_LBRACE", "tt_LBRACK", "tt_LE", "tt_LPAR", "tt_LT",
+        "tt_MINUS", "tt_MOD", "tt_NE", "tt_NE", "tt_NOT", 
+        "tt_OR", "tt_PERIOD", "tt_PLUS", "tt_QUOTE", "tt_RBRACE",
+        "tt_RBRACK", "tt_RPAR", "tt_SEMICOLON", "tt_STAR"
+    ]
+);
+
+func split(s, char) {
+    retVal = [];
+    lex = "";
+    s = list(s);
+    i = 0;
+    while (i < int(s)) {
+        if (s[i] == char) {
+            retVal = retVal + lex;
+            lex = "";
+        } else {
+            lex = lex + s[i];
+        };
+        i = i + 1;
+        if (i == int(s)) {
+            retVal = retVal + lex;
+        };
+    };
+    retVal;
+};
+
+func contains(phrase, word) {
+    phrase = list(phrase);
+    word = list(word);
+    lex = "";
+    i = 0;
+    wi = 0;
+    while (i < len(phrase)) {
+        if (list(lex) == word) {
+            i = len(phrase);
+        } else if (phrase[i] == word[wi]) {
+            lex = lex + phrase[i];
+            wi = wi + 1;
+        } else {
+            if (lex != "") {
+                i = i - 1;
+            };
+            lex = "";
+            wi = 0;
+        };
+        i = i + 1;
+    };
+    list(lex) == word;
+};
+
+func isDigit(o) {
+    retVal = false;
+    if ((typeof(o) == "<int>") || (typeof(o) == "<float>")) {
+        retVal = true;
+    } else if ((typeof(o) == "<list>") || (o == none)) {
+        retVal = false;
+    } else if (typeof(o) == "<bool>") {
+        retVal = o;
+    } else {
+        retVal = int(o) != int("not a digit");
+    };
+    retVal;
+};
+
+func isLetter(o) {
+    retVal = false;
+    if (typeof(o) != "<string>") {
+        retVal = false;
+    } else {
+        retVal = (contains("abcdefghijklmnopqrstuvwxyz", o)) || (contains("ABCDEFGHIJKLMNOPQRSTUVWXYZ", o));
+    };
+    retVal;
+};
+
+func isLetterOrDigit(o) {
+    (isLetter(o)) || (isDigit(o));
+};
+
+func tokenize(program) {
+    retVal = [];
+    p = list(program);
+    i = 0;
+    state = 0;
+    lexeme = "";
+
+    while (i <= len(p)) {
+        if (state == 0) {
+            if (i == len(p)) {
+                retVal = retVal + [["tt_EOF", none]];
+                i = i + 1;
+            } else if (p[i] == ".") {
+                lexeme = lexeme + p[i];
+                i = i + 1;
+                state = -1;
+            } else if (p[i] == "0") {
+                lexeme = lexeme + p[i];
+                i = i + 1;
+                state = 1;
+            } else if (isDigit(p[i])) {
+                lexeme = lexeme + p[i];
+                i = i + 1;
+                state = 2;
+            } else if ((isLetter(p[i])) || (p[i] == "_")) {
+                lexeme = lexeme + p[i];
+                i = i + 1;
+                state = 3;
+            } else if (contains("&=:,=>{<(-%!|.+#""});*[]", p[i])) {
+                lexeme = lexeme + p[i];
+                i = i + 1;
+                state = 4;
+                if ((lexeme == "=") || (lexeme == ">") || (lexeme == "!")) {
+                    state = 9;
+                } else if (lexeme == "<") {
+                    state = 10;
+                } else if (lexeme == """") {
+                    state = 11;
+                } else if (lexeme == "/") {
+                    state = 5;
+                } else if (lexeme == "#") {
+                    state = 8;
+                } else if (lexeme == "&") {
+                    state = 13;
+                } else if (lexeme == "|") {
+                    state = 14;
+                } else if (lexeme == "-") {
+                    state = 15;
+                };
+            } else if (p[i] == " ") {
+                i = i + 1;
+            } else {
+                print("Illegal character: ", p[i]);
+                i = i + 1;
+            };
+        } else if (state == -1) {
+            if (i == len(p) || !isDigit(p[i])) {
+                retVal = retVal + [["tt_NUM", lexeme]];
+                lexeme = "";
+                state = 0;
+            } else {
+                lexeme = lexeme + p[i];
+                i = i + 1;
+            };
+        } else if (state == 1) {
+            if (p[i] == ".") {
+                lexeme = lexeme + p[i];
+                i = i + 1;
+                state = -1;
+            } else {
+                retVal = retVal + [["tt_NUM", lexeme]];
+                lexeme = "";
+                state = 0;
+            };
+        } else if (state == 2) {
+            if (p[i] == ".") {
+                lexeme = lexeme + p[i];
+                i = i + 1;
+                state = -1;
+            } else if ((i == len(p)) || (!isDigit(p[i]))) {
+                retVal = retVal + [["tt_NUM", lexeme]];
+                lexeme = "";
+                state = 0;
+            } else {
+                lexeme = lexeme + p[i];
+                i = i + 1;
+            };
+        } else if (state == 3) {
+            if ((i == len(p)) || (!isLetterOrDigit(p[i]))) {
+                if (p[i] == "_") {
+                    lexeme = lexeme + p[i];
+                    i = i + 1;
+                } else {
+                    if (containsKey(keywords, lexeme)) {
+                        retVal = retVal + [[get(keywords, lexeme), none]];
+                        lexeme = "";
+                        state = 0;
+                    } else {
+                        retVal = retVal + [["tt_ID", lexeme]];
+                        lexeme = "";
+                        state = 0;
+                    };
+                };
+            } else {
+                lexeme = lexeme + p[i];
+                i = i + 1;
+            };
+        } else if (state == 4) {
+            retVal = retVal + [[get(opsAndPunct, lexeme), none]];
+            lexeme = "";
+            state = 0;
+        } else if (state == 5) {
+            if (i == len(p)) {
+                print("Malformed comment: found ", p[i], " after /");
+                state = 0;
+            } else if (p[i] == "/") {
+                lexeme = lexeme + p[i];
+                i = i + 1;
+                state = 4;
+            } else if ((isDigit(p[i])) || (p[i] == " ")) {
+                state = 4;
+            } else if (p[i] != "*") {
+                print("Malfored comment: found ", p[i], " after /");
+                state = 0;
+            } else if (p[i] == "*") {
+                i = i + 1;
+                state = 6;
+            };
+        } else if (state == 6) {
+            if (i == len(p)) {
+                print("Unclosed comment at end of file");
+                state = 0;
+            } else if (p[i] == "*") {
+                i = i + 1;
+                state = 7;
+            } else {
+                i = i + 1;
+            };
+        } else if (state == 7) {
+            if (i == len(p)) {
+                print("Unclosed comment at end of file");
+                state = 0;
+            } else if (p[i] == "/") {
+                i = i + 1;
+                lexeme = "";
+                state = 0;
+            } else if (p[i] == "*") {
+                i = i + 1;
+            } else {
+                i = i + 1;
+                state = 6;
+            };
+        } else if (state == 8) {
+            if (i == len(p)) {
+                lexeme = "";
+                state = 0;
+            } else {
+                i = i + 1;
+            };
+        } else if (state == 9) {
+            if (p[i] == "=") {
+                lexeme = lexeme + p[i];
+                i = i + 1;
+            } else if ((p[i] == ">") and (lexeme == p[i])) {
+                lexeme = lexeme + p[i];
+                i = i + 1;
+            };
+            state = 4;
+        } else if (state == 10) {
+            if ((p[i] == "=") || (p[i] == ">")) {
+                lexeme = lexeme + p[i];
+                i = i + 1;
+            };
+            state = 4;
+        } else if (state == 11) {
+            if (i == len(p)) {
+                print("Unclosed string at end of file");
+                state = 0;
+            } else if (p[i] == """") {
+                lexeme = lexeme + p[i];
+                i = i + 1;
+            };
+        } else if (state == 12) {
+            if (p[i] == """") {
+                i = i + 1;
+                state = 11;
+            } else {
+                retVal = retVal[["tt_STRING", lexeme]];
+                lexeme = "";
+                state = 0;
+            };
+        } else if (state == 13) {
+            if (p[i] == "&") {
+                lexeme = lexeme + p[i];
+                i = i + 1;
+            };
+            state = 4;
+        } else if (state == 14) {
+            if (p[i] == "|") {
+                lexeme = lexeme + p[i];
+                i = i + 1;
+            };
+            state = 4;
+        } else if (state == 15) {
+            if (p[i] == ">") {
+                lexeme = lexeme + p[i];
+                i = i + 1;
+            };
+        };
+    };
+    retVal;
+};
+
+func check(token, target) {
+    retVal = false;
+    if (typeof(target) == "<string>") {
+        retVal = token[0] == target;
+    } else if (typeof(target) == "<list>") {
+        i = 0;
+        while (i < len(target)) {
+            if (token[0] == target[i]) {
+                retVal = true;
+                i = len(target);
+            };
+            i = i + 1;
+        };
+    };
+    retVal;
+};
+
+func match(tokens, index, target) {
+    retVal = index;
+    token = tokens[index];
+    if (token[0] == target) {
+        retVal = retVal + 1;
+    } else {
+        print("Expected ", target, " but found ", tokens[index]);
+    };
+    retVal;
+};
+
+func parseArgsRest(tokens, index, a) {
+    retVal = none;
+    if (check(tokens[index], "tt_COMMA")) {
+        index = match(tokens, index, "tt_COMMA");
+        asI = parseArgs(tokens, index);
+        as = asI[0]; index = asI[1];
+        as = a + as;
+        retVal = as;
+    } else {
+        retVal = [a];
+    };
+    [retVal, index];
+};
+
+func parseArgs(tokens, index) {
+    aI = parseExpr(tokens, index);
+    a = aI[0]; index = aI[1];
+    parseArgsRest(tokens, index, a);
+};
+
+func parseArgList(tokens, index) {
+    retVal = none;
+    if (check(tokens[index], [
+            "tt_BOOL", "tt_FALSE", "tt_FLOAT", "tt_ID", "tt_INT",
+            "tt_LIST", "tt_LBRACK", "tt_LPAR", "tt_MINUS",
+            "tt_NONE", "tt_NOT", "tt_NUM", "tt_STR", "tt_STRING",
+            "tt_TRUE"        
+                ])) {
+        retValI = parseArgs(tokens, index);
+        retVal = retValI[0]; index = retValI[1];
+    } else {
+        retVal = [];
+    };
+    [retVal, index];
+};
+
+func parseFactorRest(tokens, index, id) {
+    retVal = none;
+    if (check(tokens[index], "tt_LPAR")) {
+        index = match(tokens, index, "tt_LPAR");
+        argsI = parseArgList(tokens, index);
+        args = argsI[0]; index = argsI[1];
+        index = match(tokens, index, "tt_RPAR");
+        retVal = "Call(" + id + ", " + args + ");";
+    } else if (check(tokens[index], "tt_LRABCK")) {
+        index = match(tokens, index, "tt_LBRACK");
+        exprI = parseExpr(tokens, index);
+        expr = exprI[0]; index = exprI[1];
+        index = match(tokens, index, "tt_RBRACK");
+        retVal = "Index(" + "Id(" + id + "), " + expr + ");";
+    } else {
+        retVal = "Id(" + id + ");";
+    };
+    [retVal, index];
+};
+
+func parseFactor(tokens, index) {
+    retVal = none;
+    if (check(tokens[index], "tt_FALSE")) {
+        index = match(tokens, index, "tt_FALSE");
+        retVal = "False();";
+    } else if (check(tokens[index], "tt_ID")) {
+        idToken = tokens[index];
+        id = idToken[1];
+        index = match(tokens, index, "tt_ID");
+        retValI = parseFactorRest(tokens, index, id);
+        retVal = retValI[0]; index = retValI[1];
+    } else if (check(tokens[index], "tt_LAMBDA")) {
+        index = match(tokens, index, "tt_LAMBDA");
+        index = match(tokens, index, "tt_LPAR");
+        psI = parseParam(tokens, index);
+        ps = psI[0]; index = psI[1];
+        index = match(tokens, index, "tt_RPAR");
+        index = match(tokens, index, "tt_LBRACE");
+        sI = parseStmt(tokens, index);
+        s = sI[0]; index = sI[1];
+        index = match(tokens, index, "tt_RBRACE");
+        retVal = "Lambda(" + ps + ", " + s + ")";
+    } else if (check(tokens[index], "tt_LPAR")) {
+        index = match(tokens, index, "tt_LPAR");
+        exprI = parseExpr(tokens, index);
+        expr = exprI[0]; index = exprI[1];
+        index = match(tokens, index, "tt_RPAR");
+        retVal = expr;
+    } else if (check(tokens[index], "tt_LBRACK")) {
+        index = match(tokens, index, "tt_LBRACK");
+        if (check(tokens[index], "tt_RBRACK")) {
+            index = match(tokens, index, "tt_RBRACK");
+            retVal = "List([]);";
+        } else {
+            listValuesI = parseItems(tokens, index);
+            listValues = listValuesI[0]; index = listValuesI[1];
+            index = match(tokens, index, "tt_RBRACK");
+            if (check(tokens[index], "tt_LBRACK")) {
+                index = match(tokens, index, "tt_LBRACK");
+                exprI = parseExpr(tokens, index);
+                expr = exprI[0]; index = exprI[1];
+                index = match(tokens, index, "tt_RBRACK");
+                retVal = "Index(List(" + listValues + "), " + expr + ");";
+            } else {
+                retVal = "List(" + listValues + ");";
+            };
+        };
+    } else if (check(tokens[index], ["tt_MINUS", "tt_NOT"])) {
+        opI = parseUnOp(tokens, index);
+        op = opI[0]; index = opI[1];
+        exprI = parseFactor(tokens, index);
+        expr = exprI[0]; index = exprI[1];
+        retVal = "UnOp(" + op + ", " + expr + ");";
+    } else if (check(tokens[index], "tt_NONE")) {
+        index = match(tokens, index, "tt_NONE");
+        retVal = "None();";
+    } else if (check(tokens[index], "tt_NUM")) {
+        valueToken = tokens[index];
+        value = valueToken[1];
+        index = match(tokens, index, "tt_NUM");
+        retVal = "Num(" + value + ");";
+    } else if (check(tokens[index], "tt_PROMPT")) {
+        index = match(tokens, index, "tt_PROMPT");
+        index = match(tokens, index, "tt_LPAR");
+        msgToken = tokens[index];
+        msg = msgToken[1];
+        index = match(tokens, index, "tt_STRING");
+        index = match(tokens, index, "tt_RPAR");
+        retVal = "Prompt(" + msg + ");";
+    } else if (check(tokens[index], "tt_STRING")) {
+        sValue = tokens[index];
+        s = sValue[1];
+        index = match(tokens, index, "tt_STRING");
+        retVal = "Str(" + s + ");";
+    } else if (check(tokens[index], "tt_TRUE")) {
+        index = match(tokens, index, "tt_TRUE");
+        retVal = "True();";
+    } else if (check(tokens[index], "tt_TYPEOF")) {
+        index = match(tokens, index, "tt_TYPEOF");
+        index = match(tokens, index, "tt_LPAR");
+        exprI = parseExpr(tokens, index);
+        expr = exprI[0]; index = exprI[1];
+        index = match(tokens, index, "tt_RPAR");
+        retVal = "TypeOf(" + expr + ");";
+    } else if (check(tokens[index], [
+            "tt_BOOL", "tt_FLOAT", "tt_INT", "tt_LIST", "tt_STR"        
+                ])) {
+        retValI = parseTypeCast(tokens, index);
+        retVal = retValI[0]; index = retValI[1];
+    } else {
+        print("Invalid Factor: " + tokens[index]);
+    };
+    [retVal, index];
+};
+
+func parseTerm(tokens, index) {
+    leftFI = parseFactor(tokens, index);
+    leftF = leftFI[0]; index = leftFI[1];
+    while (check(tokens[index], [
+            "tt_AND", "tt_DIV", "tt_INTDIV", "tt_MOD", "tt_STAR"        
+                ])) {
+        opI = parseMultOp(tokens, index);
+        op = opI[0]; index = opI[1];
+        rightFI = parseFactor(tokens, index);
+        rightF = rightFI[0]; index = rightFI[1];
+        leftF = "BinOp(" + leftF + ", " + op + ", " + rightF + ");";
+    };
+    [leftF, index];
+};
+
+func parseUnOp(tokens, index) {
+    retVal = none;
+    if (check(tokens[index], "tt_MINUS")) {
+        index = match(tokens, index, "tt_MINUS");
+        retVal = "op1_NEG";
+    } else if (check(tokens[index], "tt_NOT")) {
+        index = match(tokens, index, "tt_NOT");
+        retVal = "op1_NOT";
+    } else {
+        print("Invalid Unary Operator ", tokens[index]);
+    };
+    [retVal, index];
+};
+
+func parseMultOp(tokens, index) {
+    retVal = none;
+    if (check(tokens[index], "tt_AND")) {
+        index = match(tokens, index, "tt_AND");
+        retVal = "op2_AND";
+    } else if (check(tokens[index], "tt_DIV")) {
+        index = match(tokens, index, "tt_DIV");
+        retVal = "op2_DIV";
+    } else if (check(tokens[index], "tt_INTDIV")) {
+        index = match(tokens, index, "tt_INTDIV");
+        retVal = "op2_INTDIV";
+    } else if (check(tokens[index], "tt_MOD")) {
+        index = match(tokens, index, "tt_MOD");
+        retVal = "op2_MOD";
+    } else if (check(tokens[index], "tt_STAR")) {
+        index = match(tokens, index, "tt_STAR");
+        retVal = "op2_TIMES";
+    } else {
+        print("Invalid Multiplication Operator: ", tokens[index]);
+    };
+    [retVal, index];
+};
+
+func parseAddOp(tokens, index) {
+    retVal = none;
+    if (check(tokens[index], "tt_MINUS")) {
+        index = match(tokens, index, "tt_MINUS");
+        retVal = "op2_MINUS";
+    } else if (check(tokens[index], "tt_OR")) {
+        index = match(tokens, index, "tt_OR");
+        retVal = "op2_OR";
+    } else if (check(tokens[index], "tt_PLUS")) {
+        index = match(tokens, index, "tt_PLUS");
+        retVal = "op2_PLUS";
+    } else {
+        print("Invalid Addition Operator: " + tokens[index]);
+    };
+    [retVal, index];
+};
+
+func parseRelOp(tokens, index) {
+    retVal = none;
+    if (check(tokens[index], "tt_EQ")) {
+        index = match(tokens, index, "tt_EQ");
+        retVal = "op2_EQ";
+    } else if (check(tokens[index], "tt_GE")) {
+        index = match(tokens, index, "tt_GE");
+        retVal = "op2_GE";
+    } else if (check(tokens[index], "tt_GT")) {
+        index = match(tokens, index, "tt_GT");
+        retVal = "op2_GT";
+    } else if (check(tokens[index], "tt_LE")) {
+        index = match(tokens, index, "tt_LE");
+        retVal = "op2_LE";
+    } else if (check(tokens[index], "tt_LT")) {
+        index = match(tokens, index, "tt_LT");
+        retVal = "op2_LT";
+    } else if (check(tokens[index], "tt_NE")) {
+        index = match(tokens, index, "tt_NE");
+        retVal = "op2_NE";
+    } else {
+        print("Error: Invalid Operation Statement ", tokens[index]);
+    };
+    [retVal, index];
+};
+
+func parseSimpleExpr(tokens, index) {
+    leftTI = parseTerm(tokens, index);
+    leftT = leftTI[0]; index = leftTI[1];
+    while (check(tokens[index], ["tt_MINUS", "tt_OR", "tt_PLUS"])) {
+        opI = parseAddOp(tokens, index);
+        op = opI[0]; index = opI[1];
+        rightTI = parseTerm(tokens, index);
+        rightT = rightTI[0]; index = rightTI[1];
+        leftT = "BinOp(" + leftT + ", " + op + ", " + rightT + ");";
+    };
+    [leftT, index];
+};
+
+func parseExprRest(tokens, index, left) {
+    retVal = none;
+    if (check(tokens[index], [
+            "tt_EQ", "tt_GE", "tt_GT", "tt_LE", "tt_LT", "tt_NE"        
+                ])) {
+        opI = parseRelOp(tokens, index);
+        op = opI[0]; index = opI[1];
+        rightI = parseSimpleExpr(tokens, index);
+        right = rightI[0]; index = rightI[1];
+        retVal = "BinOp(" + left + ", " + op + ", " + right + ");";
+    } else {
+        retVal = left;
+    };
+    [retVal, index];
+};
+
+func parseExpr(tokens, index) {
+    leftI = parseSimpleExpr(tokens, index);
+    left = leftI[0]; index = leftI[1];
+    parseExprRest(tokens, index, left);
+};
+
+func parseItem(tokens, index) {
+    retVal = none;
+    if (check(tokens[index], [
+            "tt_BOOL", "tt_FALSE", "tt_FLOAT", "tt_ID", "tt_INT",
+            "tt_LBRACK", "tt_LIST", "tt_LPAR", "tt_MINUS", "tt_NONE",
+            "tt_NOT", "tt_NUM", "tt_PROMPT", "tt_STR", "tt_STRING",
+            "tt_TRUE", "tt_TYPEOF"    
+            ])) {
+        exprI = parseExpr(tokens, index);
+        expr = exprI[0]; index = exprI[1];
+        retVal = "ExprItem(" + expr + ");";
+    } else {
+        print("Invalid item: ", tokens[index]);
+    };
+    [retVal, index];
+};
+
+func parseItems(tokens, index) {
+    func parseItemRest(tokens, index, it) {
+        retVal = none;
+        if (check(tokens[index], "tt_COMMA")) {
+            index = match(tokens, index, "tt_COMMA");
+            itsI = parseItems(tokens, index);
+            its = itsI[0]; index = itsI[1];
+            retVal = [it] + its;
+        } else {
+            retVal = [it];
+        };
+        [retVal, index];
+    };
+    itI = parseItem(tokens, index);
+    it = itI[0]; index = itI[1];
+    parseItemRest(tokens, index, it);
+};
+
+func parseTypeCast(tokens, index) {
+    type = tokens[index];
+    if (check(tokens[index], "tt_BOOL")) { index = match(tokens, index, "tt_BOOL"); }
+    else if (check(tokens[index], "tt_FLOAT")) { index = match(tokens, index, "tt_FLOAT"); }
+    else if (check(tokens[index], "tt_INT")) { index = match(tokens, index, "tt_INT"); }
+    else if (check(tokens[index], "tt_STR")) { index = match(tokens, index, "tt_STR"); } 
+    else if (check(tokens[index], "tt_LIST")) { index = match(tokens, index, "tt_LIST"); }
+    else { print("Invalid Type for Casting ", tokens[index]); };
+    index = match(tokens, index, "tt_LPAR");
+    exprI = parseExpr(tokens, index);
+    expr = exprI[0]; index = exprI[1];
+    index = match(tokens, index, "tt_RPAR");
+    [("TypeCast(" + type + ", " + expr + ");"), index];
+};
+
+func parseWhile(tokens, index) {
+    index = match(tokens, index, "tt_WHILE");
+    exprI = parseExpr(tokens, index);
+    expr = exprI[0]; index = exprI[1];
+    index = match(tokens, index, "tt_LBRACE");
+    bodyI = parseBlock(tokens, index);
+    body = bodyI[0]; index = bodyI[1];
+    index = match(tokens, index, "tt_RBRACE");
+    [("While(" + expr + ", " + body + ");"), index];
+};
+
+func parseIf(tokens, index) {
+    retVal = none;
+    index = match(tokens, index, "tt_IF");
+    exprI = parseExpr(tokens, index);
+    expr = exprI[0]; index = exprI[1];
+    index = match(tokens, index, "tt_LBRACE");
+    trueClauseI = parseBlock(tokens, index);
+    trueClause = trueClauseI[0]; index = trueClauseI[1];
+    index = match(tokens, index, "tt_RBRACE");
+    if (check(tokens[index], "tt_ELSE")) {
+        index = match(tokens, index, "tt_ELSE");
+        if (check(tokens[index], "tt_IF")) {
+            falseClauseI = parseIf(tokens, index);
+            falseClause = falseClauseI[0]; index = falseClauseI[1];
+            retVal = "IfElse(" + expr + ", " + trueClause;
+            retVal = retVal + ", " + "Block(" + falseClause;
+            retVal = retVal + "));";
+        } else {
+            index = match(tokens, index, "tt_LBRACE");
+            falseClauseI = parseBlock(tokens, index);
+            falseClause = falseClauseI[0]; index = falseClauseI[1];
+            index = match(tokens, index, "tt_RBRACE");
+            retVal = "IfElse(" + expr + ", " + trueClause;
+            retVal = retVal + ", " + falseClause + ");";
+        };
+    } else {
+        retVal = "If(" + expr + ", " + trueClause + ");";
+    };
+    [retVal, index];
+};
+
+func parseId(tokens, index) {
+    retVal = none;
+    idToken = tokens[index];
+    id = idToken[1];
+    index = match(tokens, index, "tt_ID");
+    if (check(tokens[index], "tt_ASSIGN")) {
+        index = match(tokens, index, "tt_ASSIGN");
+        exprI = parseExpr(tokens, index);
+        expr = exprI[0]; index = exprI[1];
+        retVal = "Assign(" + id + ", " + expr + ");";
+    } else if (check(tokens[index], "tt_LPAR")) {
+        exprI = parseFactorRest(tokens, index, id);
+        expr = exprI[0]; index = exprI[1];
+        retVal = "ExprStmt(" + expr + ");";
+    } else if (check(tokens[index], "tt_SEMICOLON")) {
+        retVal = "ExprStmt(Id(" + id + "));";
+    } else if (check(tokens[index], "tt_LBRACK")) {
+        index = match(tokens, index, "tt_LBRACK");
+        exprI = parseExpr(tokens, index);
+        expr = exprI[0]; index = exprI[1];
+        index = match(tokens, index, "tt_RBRACK");
+        retVal = "ExprStmt(Index(Id(" + id + "), " + expr + "));";
+    } else {
+        op = none;
+        right = none;
+        if (check(tokens[index], ["tt_EQ", "tt_GE", "tt_GT",
+                "tt_LE", "tt_LT", "tt_NE"])) {
+            opI = parseRelOp(tokens, index);
+            op = opI[0]; index = opI[1];
+        } else if (check(tokens[index], ["tt_MINUS", "tt_OR", "tt_PLUS"])) {
+            opI = parseAddOp(tokens, index);
+            op = opI[0]; index = opI[1];
+        } else {
+            opI = parseMultOp(tokens, index);
+            op = opI[0]; index = opI[1];
+        };
+        rightI = parseExpr(tokens, index);
+        right = rightI[0]; index = rightI[1];
+        retVal = "ExprStmt(BinOp(Id(" + id + ")" + op + ", " + right + "));";
+    };
+    [retVal, index];
+};
+
+func parseParams(tokens, index) {
+    retVal = none;
+    idToken = tokens[index];
+    name = idToken[1];
+    index = match(tokens, index, "tt_ID");
+    if (check(tokens[index], "tt_RPAR")) {
+        retVal = [];
+    } else {
+        index = match(tokens, index, "tt_COMMA");
+    };
+    retVal = "Param(" + name + ");";
+    [retVal, index];
+};
+
+func parseParam(tokens, index) {
+    retVal = [];
+    while (check(tokens[index], "tt_ID")) {
+        ppsI = parseParams(tokens, index);
+        pps = ppsI[0]; index = ppsI[1];
+        retVal = retVal + pps;
+    };
+    [retVal, index];
+};
+
+func parseFuncDecl(tokens, index) {
+    index = match(tokens, index, "tt_FUNC");
+    idToken = tokens[index];
+    id = idToken[1];
+    index = match(tokens, index, "tt_ID");
+    index = match(tokens, index, "tt_LPAR");
+    paramListI = parseParam(tokens, index);
+    paramList = paramListI[0]; index = paramListI[1];
+    index = match(tokens, index, "tt_RPAR");
+    index = match(tokens, index, "tt_LBRACE");
+    blockI = parseBlock(tokens, index);
+    block = blockI[0]; index = blockI[1];
+    index = match(tokens, index, "tt_RBRACE");
+    [("FuncDecl(" + id + ", " + paramList + ", " + block + ");"), index];
+};
+
+func parseDo(tokens, index) {
+    index = match(tokens, index, "tt_DO");
+    numI = parseExpr(tokens, index);
+    num = numI[0]; index = numI[1];
+    index = match(tokens, index, "tt_TIMES");
+    index = match(tokens, index, "tt_LBRACE");
+    bodyI = parseBlock(tokens, index);
+    body = bodyI[0]; index = bodyI[1];
+    [("For(" + num + ", " + body + ");"), index];
+};
+
+func parseStmt(tokens, index) {
+    retVal = none;
+    if (check(tokens[index], "tt_DO")) {
+        doI = parseDo(tokens, index);
+        retVal = doI[0]; index = doI[1];
+    } else if (check(tokens[index], "tt_FUNC")) {
+        funcDeclI = parseFuncDecl(tokens, index);
+        retVal = funcDeclI[0]; index = funcDeclI[1];
+    } else if (check(tokens[index], "tt_ID")) {
+        idI = parseId(tokens, index);
+        retVal = idI[0]; index = idI[1];
+    } else if (check(tokens[index], "tt_IF")) {
+        ifI = parseIf(tokens, index);
+        retVal = ifI[0]; index = ifI[1];
+    } else if (check(tokens[index], "tt_PRINT")) {
+        index = match(tokens, index, "tt_PRINT");
+        index = match(tokens, index, "tt_LPAR");
+        itemsI = parseItems(tokens, index);
+        items = itemsI[0]; index = itemsI[1];
+        index = match(tokens, index, "tt_RPAR");
+        retVal = "Print(" + items + ")";
+    } else if (check(tokens[index], "tt_SEMICOLON")) {
+        index = match(tokens, index, "tt_SEMICOLON");
+        stmtI = parseStmt(tokens, index);
+        retVal = stmtI[0]; index[1];
+    } else if (check(tokens[index], "tt_WHILE")) {
+        whileI = parseWhile(tokens, index);
+        retVal = whileI[0]; index = whileI[1];
+    } else if (check(tokens[index], ["tt_FALSE", "tt_LBRACE",
+            "tt_LBRACK", "tt_LPAR", "tt_MINUS", "tt_NONE",
+            "tt_NOT", "tt_NUM", "tt_PROMPT", "tt_STRING", "tt_TRUE",
+            "tt_TYPEOF", "tt_BOOL", "tt_FLOAT", "tt_INT", "tt_LIST",
+            "tt_STR"])) {
+        exprI = parseExpr(tokens, index);
+        expr = exprI[0]; index = exprI[1];
+        retVal = "ExprStmt(" + expr + ");";
+    } else {
+        print("Error: Invalid Expression Statement " + tokens[index]);
+    };
+    [retVal, index];
+};
+
+func parseStmtList(tokens, index) {
+    func parseStmts(tokens, index) {
+        retVal = [];
+        stmtI = parseStmt(tokens, index);
+        stmt = stmtI[0]; index = stmtI[1];
+        if (check(tokens[index], "tt_SEMICOLON")) {
+            index = match(tokens, index, "tt_SEMICOLON");
+            if (check(tokens[index], ["tt_EOF", "tt_RBRACE"])) {
+                retVal = retVal + [stmt];
+            };
+        } else {
+            print("Expected SEMICOLON but found ", tokens[index]);
+            retVal = none;
+        };
+        if (retVal == []) {
+            stmtsI = parseStmts(tokens, index);
+            retVal = [stmt] + stmtsI[0]; index = stmtsI[1];
+        };
+        [retVal, index];
+    };
+    parseStmts(tokens, index);
+};
+
+func parseBlock(tokens, index) {
+    stmtsI = parseStmtList(tokens, index);
+    stmts = stmtsI[0]; index = stmtsI[1];
+    [("Block(" + stmts + ");"), index];
+};
+
+func parseProgram(tokens) {
+    retVal = none;
+    if (check(tokens[0], "tt_EOF")) {
+        retVal = "Program(Block(none));";
+    } else {
+        blockI = parseBlock(tokens, 0);
+        block = blockI[0]; index = blockI[1];
+        index = match(tokens, index, "tt_EOF");
+        retVal = "Program(" + block + ");";
+    };
+    retVal;
+};
+
+func printTokens(tokens) {
+    i = 0;
+    while (i < len(tokens)) {
+        print(tokens[i]);
+        i = i + 1;
+    };
+};
+
+func main(s) {
+    tokens = tokenize(s);
+    print(parseProgram(tokens));
+};
+
+main(s);
