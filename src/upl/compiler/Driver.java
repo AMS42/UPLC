@@ -23,6 +23,27 @@ public class Driver {
 				@SuppressWarnings("resource")
 				java.util.Scanner s = new java.util.Scanner(System.in);
 				cmd = s.nextLine();
+				if (cmd.startsWith("^[[A")) {
+					boolean invalidUps = false;
+					String[] ups = cmd.split("^[[A");
+					for (String up : ups) {
+						if (!up.equals("^[[A")) {
+							invalidUps = true;
+							break;
+						}
+					}
+					if (invalidUps) {
+						System.err.println("Invalid Arrow Sequence");
+						continue;
+					}
+					int num_ups = ups.length;
+					cmd = cmds.get(i - num_ups);
+					System.out.println("> Execute " + cmd + " (Y/N)");
+					String execute = s.nextLine().toLowerCase();
+					if (!execute.equals("yes") && !execute.equals("y")) {
+						continue;
+					}
+				}
 				cmds.add(cmd);
 				if (cmd.equals("exit()")) { break; }  // exits REPL
 				else if (cmd.isBlank()) { continue; }  // doesn't execute empty program (blank)
