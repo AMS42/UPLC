@@ -28,7 +28,7 @@ class IndexAssign extends Stmt {
 			// System.err.println("Index " + ind + " is out of bounds for length " + list.length);
 			// System.exit(1);
 			// return null;
-			throw new OutOfBoundsError("Index " + ind + "is out of bounds for length " + list.length);
+			throw new OutOfBoundsError("Index " + ind + " is out of bounds for length " + list.length);
 		}
 	}
 	

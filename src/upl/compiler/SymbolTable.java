@@ -11,6 +11,9 @@ class SymbolTable {
 		table = new Stack<>();
 		modules = new ArrayList<>();
 		enter();
+		enter();
+		bind("pi", new FloatValue((float) 3.14159265));
+		bind("e", new FloatValue((float) 2.71828185));
 	}
 
 	public void bind(String id, Value value) {

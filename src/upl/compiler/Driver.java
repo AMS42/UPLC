@@ -15,6 +15,7 @@ public class Driver {
 			System.out.println("UPL (v" + VERSION + ")");
 			String cmd;
 			SymbolTable t = new SymbolTable();
+			t.enter();
 			ArrayList<String> cmds = new ArrayList<>();
 			do {
 				@SuppressWarnings("unused")
@@ -23,6 +24,7 @@ public class Driver {
 				@SuppressWarnings("resource")
 				java.util.Scanner s = new java.util.Scanner(System.in);
 				cmd = s.nextLine();
+				/*
 				if (cmd.startsWith("^[[A")) {
 					boolean invalidUps = false;
 					String[] ups = cmd.split("^[[A");
@@ -38,12 +40,13 @@ public class Driver {
 					}
 					int num_ups = ups.length;
 					cmd = cmds.get(i - num_ups);
-					System.out.println("> Execute " + cmd + " (Y/N)");
+					System.out.println(">> Execute " + cmd + " (Y/N)");
 					String execute = s.nextLine().toLowerCase();
 					if (!execute.equals("yes") && !execute.equals("y")) {
 						continue;
 					}
 				}
+				*/
 				cmds.add(cmd);
 				if (cmd.equals("exit()")) { break; }  // exits REPL
 				else if (cmd.isBlank()) { continue; }  // doesn't execute empty program (blank)
@@ -78,7 +81,7 @@ public class Driver {
 									msg.stringValue()
 							) + " : " + type
 						);
-				} catch (Exception e) { 
+				} catch (Exception e) {
 					continue; 
 				} catch (Error e) {
 					System.err.print(e.getMessage());
@@ -172,8 +175,10 @@ public class Driver {
 	 * 				Introduction of Exponents
 	 * 				Reformed division and integer division
 	 * 0.9.10 - Random with ints and floats
-	 * 0.9.11 - Global side-effects with keyword (global)
-	 * Future Build: 0.9.12 - Reformed use of semicolons
+	 * 0.9.11 - Global side-effects with keyword (global) AND
+	 * 						- Introduction of constants: pi and e
+	 * Future Build: 0.9.12 - set arithmetic, none type conversions, str to numeric conversions
+	 * Future Build: 0.9.12 - Reformed use of semicolons AND prompt can take object (not exclusively string)
 	 * Future Build: 0.9.13 - Use of arrows in REPL  - may have to hold off
 	 * Future Build: 0.9.14 - Multi-Line Blocks in REPL
 	 * Future Build: 0.9.15 - Help Function

@@ -21,10 +21,12 @@ class Load extends Stmt {
 	@Override
 	public Value interpret(SymbolTable t) throws Error {
 		try {
+			File f = new File(fileName + ".upl");
+			String abs = f.getAbsolutePath();
 			Parser p = new Parser(
 				new Scanner(
 					new FileReader(
-						new File(fileName + ".upl")
+						new File(abs)
 					)
 				)
 			);
